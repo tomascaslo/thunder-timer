@@ -7,11 +7,13 @@ gulp.task('transpile', function() {
 	return gulp.src('src/**/*.js')
 		.pipe(sourcemaps.init())
 		.pipe(babel())
-		.pipe(concat('all.js'))
+		.pipe(concat('main.js'))
 		.pipe(sourcemaps.write('.'))
 		.pipe(gulp.dest('dist'));
 });
 
-gulp.task('default', function() {
-	gulp.watch(['./index.js', 'src/*.js'], ['transpile']);
+gulp.task('watch', function() {
+  gulp.watch(['./index.js', 'src/**/*.js'], ['transpile']);
 });
+
+gulp.task('default', ['transpile', 'watch']);
