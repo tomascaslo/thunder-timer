@@ -1,0 +1,26 @@
+{
+  "name": "thundertimer",
+  "version": "0.0.1",
+  "description": "Simple and accurate Timer/Chronometer/Counter library.",
+  "main": "src/thunderTimer.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "keywords": [
+    "timer",
+    "counter",
+    "time",
+    "countdown",
+    "chronometer"
+  ],
+  "author": "@tomascaslo",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.2.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "jscs": "^2.3.0"
+  }
+}
