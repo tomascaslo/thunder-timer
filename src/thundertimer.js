@@ -1,5 +1,5 @@
 /**
- * @file ThunderTimer class implementation. ThunderTimer creates a timer that can be managed with methods like ThunderTimer.start(),
+ * @file ThunderTimer Class implementation. ThunderTimer creates a timer that can be managed with methods like ThunderTimer.start(),
  * ThunderTimer.pause(), ThunderTimer.stop(), among others.
  * @author Tomás Castro
  * @version 0.0.1
@@ -38,10 +38,10 @@ const TIME = {
 };
 
 const STATUS = {
-  NOT_STARTED: 'Not started',
-  RUNNING: 'Running',
-  PAUSED: 'Paused',
-  STOPPED: 'Stopped',
+  NOT_STARTED: 'not started',
+  RUNNING: 'running',
+  PAUSED: 'paused',
+  STOPPED: 'stopped',
 };
 
 let initialTime;
@@ -49,7 +49,7 @@ let endTime;
 let currentTime;
 
 /**
- * ThunderTimer class.
+ * ThunderTimer Class.
  *
  * @extends EventEmitter
  * @class
@@ -84,7 +84,7 @@ class ThunderTimer extends EventEmitter {
     this.separator = options.separator || ':';
     this.thunder = null;
     this.isRunning = false;
-    this.status = 'Not started.';
+    this.status = STATUS.NOT_STARTED;
   }
 
   /**
@@ -93,11 +93,9 @@ class ThunderTimer extends EventEmitter {
    */
   start(updateTimeInterval = TIME.unitsInMilliseconds.secondTenths) {
     if (!this.thunder) {
-      this._setIsRunning(true);
-      this._setStatus(STATUS.RUNNING);
       initialTime = Date.now();
-
       this.thunder = setInterval(this._updateTime.bind(this), updateTimeInterval);
+      this._updateStatus(STATUS.RUNNING);
     }
   }
 
@@ -106,21 +104,17 @@ class ThunderTimer extends EventEmitter {
    * @returns {number[]}
    */
   pause() {
-    this._setIsRunning(false);
-    this._setStatus(STATUS.PAUSED);
-
+    this._updateStatus(STATUS.PAUSED);
     return this.timeArray;
   }
 
   /**
    * Stops a timer.
-   * @returns {*|number[]}
+   * @returns {number[]}
    */
   stop() {
-    this._setIsRunning(false);
-    this._setStatus(STATUS.STOPPED);
-    clearInterval(this.thunder);
-
+    endTime = Date.now();
+    this._updateStatus(STATUS.STOPPED);
     return this.timeArray;
   }
 
@@ -139,6 +133,10 @@ class ThunderTimer extends EventEmitter {
    */
   getStatus() {
     return this.status;
+  }
+
+  static getStatuses() {
+    return STATUS;
   }
 
   /**
@@ -180,6 +178,19 @@ class ThunderTimer extends EventEmitter {
     this.timeArray[2] = Math.floor((currentTime % TIME.unitsInMilliseconds.hours) / TIME.unitsInMilliseconds.minutes);
     this.timeArray[1] = Math.floor((currentTime % TIME.unitsInMilliseconds.minutes) / TIME.unitsInMilliseconds.seconds);
     this.timeArray[0] = (currentTime % TIME.unitsInMilliseconds.seconds) / TIME.unitsInMilliseconds.secondTenths;
+  }
+
+  _updateStatus(status) {
+    status === STATUS.RUNNING ? this._setIsRunning(true) : this._setIsRunning(false);
+    this._setStatus(status);
+    this.emit(status, this._getTimerData());
+  }
+
+  _getTimerData() {
+    return {
+      initialTime,
+      endTime,
+    };
   }
 
   /**

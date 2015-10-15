@@ -4,12 +4,12 @@ var babel = require('gulp-babel');
 var concat = require('gulp-concat');
 
 gulp.task('transpile', function() {
-	return gulp.src('src/**/*.js')
-		.pipe(sourcemaps.init())
-		.pipe(babel())
-		.pipe(concat('main.js'))
-		.pipe(sourcemaps.write('.'))
-		.pipe(gulp.dest('dist'));
+  return gulp.src('src/**/*.js')
+  .pipe(sourcemaps.init())
+  .pipe(babel())
+  .pipe(concat('thundertimer.js'))
+  .pipe(sourcemaps.write('.'))
+  .pipe(gulp.dest('dist'));
 });
 
 gulp.task('watch', function() {

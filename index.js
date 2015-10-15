@@ -1,8 +1,8 @@
 var colors = require('colors');
 
-var ThunderTimer = require('./dist/main');
+var ThunderTimer = require('./dist/thundertimer');
 
-var NUMBER_OF_TIMERS = 80000;
+var NUMBER_OF_TIMERS = 800000;
 var TIME_FOR_RESULT = 6000; // In milliseconds
 var LOGGER_INTERVAL = 100; // In milliseconds
 
