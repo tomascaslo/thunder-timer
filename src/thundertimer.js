@@ -1,5 +1,8 @@
 /**
- * Created by tomascaslo on 10/13/15.
+ * @file ThunderTimer class implementation. ThunderTimer creates a timer that can be managed with methods like ThunderTimer.start(),
+ * ThunderTimer.pause(), ThunderTimer.stop(), among others.
+ * @author Tomás Castro
+ * @version 0.0.1
  */
 import EventEmitter from 'events';
 
@@ -41,12 +44,35 @@ const STATUS = {
   STOPPED: 'Stopped',
 };
 
-let initialTime, endTime, currentTime;
+let initialTime;
+let endTime;
+let currentTime;
 
-
+/**
+ * ThunderTimer class.
+ *
+ * @extends EventEmitter
+ * @class
+ * @property {number[]} timeArray=[0, 0, 0, 0, 0] - Array of length 5 representing the current time of a timer.
+ * @property {boolean}  isCountDown=false         - Sets if the timer is a countdown.
+ * @property {Object}   thunder=null              - Holds the setInterval function.
+ * @property {boolean}  isRunning=false           - Represents the running status of a timer.
+ * @property {Object}   separator=:               - Sets the type of separator for the prettified time.
+ * @property {string}   status=Not started.       - Descriptor of the current status of the timer.
+ * @public
+ *
+ */
 class ThunderTimer extends EventEmitter {
 
-  constructor(options = new Object()) {
+  /**
+   * ThunderTimer Constructor.
+   * @constructor
+   * @param {Object}   [options={}]                        - Timer options.
+   * @param {number[]} [options.timeArray=[0, 0, 0, 0, 0]] - Array of length 5 representing the current time of a timer.
+   * @param {boolean}  [options.isCountDown=false]         - Sets if the timer is a countdown.
+   * @param {Object}   [options.separator=:]               - Sets the type of separator for the prettified time.
+   */
+  constructor(options = {}) {
     super();
 
     if (options.separator && options.separator === '.') {
@@ -55,12 +81,16 @@ class ThunderTimer extends EventEmitter {
 
     this.timeArray = options.initialTime || [0, 0, 0, 0, 0];
     this.isCountDown = options.isCountDown || false;
+    this.separator = options.separator || ':';
     this.thunder = null;
     this.isRunning = false;
-    this.separator = options.separator || ':';
     this.status = 'Not started.';
   }
 
+  /**
+   * Starts a timer.
+   * @param {number} [updateTimeInterval=TIME.unitsInMilliseconds.secondTenths] - Interval at which the timer is updated. (in milliseconds)
+   */
   start(updateTimeInterval = TIME.unitsInMilliseconds.secondTenths) {
     if (!this.thunder) {
       this._setIsRunning(true);
@@ -71,6 +101,10 @@ class ThunderTimer extends EventEmitter {
     }
   }
 
+  /**
+   * Pauses a timer.
+   * @returns {number[]}
+   */
   pause() {
     this._setIsRunning(false);
     this._setStatus(STATUS.PAUSED);
@@ -78,6 +112,10 @@ class ThunderTimer extends EventEmitter {
     return this.timeArray;
   }
 
+  /**
+   * Stops a timer.
+   * @returns {*|number[]}
+   */
   stop() {
     this._setIsRunning(false);
     this._setStatus(STATUS.STOPPED);
@@ -86,22 +124,54 @@ class ThunderTimer extends EventEmitter {
     return this.timeArray;
   }
 
+  /**
+   * Returns a representation of the arrayTime of timer.
+   * @param {boolean} [pretty=false] - If set to true timer is prettified and returned as String.
+   * @returns {string|Array}
+   */
   getTime(pretty = false) {
     return pretty ? this._prettify() : this.timeArray.reverse().join(this.separator);
   }
 
-  getStatus(status) {
+  /**
+   * Returns the current status descriptor of timer.
+   * @returns {string}
+   */
+  getStatus() {
     return this.status;
   }
 
+  /**
+   * Sets the value for isRunning of timer.
+   * @param {boolean} isRunning - Represents the running state of the timer.
+   * @private
+   */
   _setIsRunning(isRunning) {
     this.isRunning = isRunning;
   }
 
+  /**
+   * Returns the current running status of timer.
+   * @returns {boolean}
+   * @private
+   */
+  _getIsRunning() {
+    return this.isRunning;
+  }
+
+  /**
+   * Sets the status of timer.
+   * @param {string} status - Status descriptor of timer.
+   * @private
+   */
   _setStatus(status) {
     this.status = status;
   }
 
+  /**
+   * Updates arrayTime.
+   * @private
+   */
   _updateTime() {
     currentTime = Date.now() - initialTime;
 
@@ -112,6 +182,11 @@ class ThunderTimer extends EventEmitter {
     this.timeArray[0] = (currentTime % TIME.unitsInMilliseconds.seconds) / TIME.unitsInMilliseconds.secondTenths;
   }
 
+  /**
+   * Prettifies timer.
+   * @returns {string}
+   * @private
+   */
   _prettify() {
     return this.timeArray[TIME.SECONDS_POSITION] + ' ' + TIME.SECONDS + ', ' +
             this.timeArray[TIME.MINUTES_POSITION] + ' ' + TIME.MINUTES + ', ' +
