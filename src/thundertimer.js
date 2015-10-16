@@ -44,14 +44,6 @@ const STATUS = {
   STOPPED: 'stopped',
 };
 
-let initialTime;
-let endTime;
-let currentTime = 0;
-let realTime = 0;
-let onRestartTime = 0;
-let onPauseTime = 0;
-let leisureTime = 0;
-
 /**
  * ThunderTimer Class.
  *
@@ -63,6 +55,7 @@ let leisureTime = 0;
  * @property {boolean}  isRunning=false           - Represents the running status of a timer.
  * @property {Object}   separator=:               - Sets the type of separator for the prettified time.
  * @property {string}   status=Not started.       - Descriptor of the current status of the timer.
+ * @property {Object}   metaTimes                 - Helper time variables for in timer calculations.
  * @public
  *
  */
@@ -89,6 +82,15 @@ class ThunderTimer extends EventEmitter {
     this.thunder = null;
     this.isRunning = false;
     this.status = STATUS.NOT_STARTED;
+    this.metaTimes = {
+      initialTime: null,
+      endTime: null,
+      currentTime: 0,
+      realTime: 0,
+      onRestartTime: 0,
+      onPauseTime: 0,
+      leisureTime: 0,
+    };
   }
 
   /**
@@ -97,10 +99,10 @@ class ThunderTimer extends EventEmitter {
    */
   start(updateTimeInterval = TIME.unitsInMilliseconds.secondTenths) {
     if (this.status === STATUS.STOPPED) return;
-    !this.thunder ? initialTime = Date.now() : noop();
-    onPauseTime ? (function() {
-      onRestartTime = Date.now();
-      leisureTime += (onRestartTime - onPauseTime);
+    !this.thunder ? this.metaTimes.initialTime = Date.now() : noop();
+    this.metaTimes.onPauseTime ? (() => {
+      this.metaTimes.onRestartTime = Date.now();
+      this.metaTimes.leisureTime += (this.metaTimes.onRestartTime - this.metaTimes.onPauseTime);
     })() : noop();
 
     this.thunder = setInterval(this._updateTime.bind(this), updateTimeInterval);
@@ -113,7 +115,7 @@ class ThunderTimer extends EventEmitter {
    */
   pause() {
     if (this.status !== STATUS.RUNNING) return;
-    onPauseTime = Date.now();
+    this.metaTimes.onPauseTime = Date.now();
     clearInterval(this.thunder);
     this._updateStatus(STATUS.PAUSED);
     return this.getTime();
@@ -124,7 +126,7 @@ class ThunderTimer extends EventEmitter {
    */
   stop() {
     if (this.status !== STATUS.RUNNING && this.status !== STATUS.PAUSED) return;
-    endTime = Date.now();
+    this.metaTimes.endTime = Date.now();
     clearInterval(this.thunder);
     this._updateStatus(STATUS.STOPPED);
   }
@@ -182,14 +184,14 @@ class ThunderTimer extends EventEmitter {
    * @private
    */
   _updateTime() {
-    realTime = Date.now() - initialTime;
-    currentTime = realTime - leisureTime;
+    this.metaTimes.realTime = Date.now() - this.metaTimes.initialTime;
+    this.metaTimes.currentTime = this.metaTimes.realTime - this.metaTimes.leisureTime;
 
-    this.timeArray[4] = Math.floor(currentTime / TIME.unitsInMilliseconds.days);
-    this.timeArray[3] = Math.floor((currentTime % TIME.unitsInMilliseconds.days) / TIME.unitsInMilliseconds.hours);
-    this.timeArray[2] = Math.floor((currentTime % TIME.unitsInMilliseconds.hours) / TIME.unitsInMilliseconds.minutes);
-    this.timeArray[1] = Math.floor((currentTime % TIME.unitsInMilliseconds.minutes) / TIME.unitsInMilliseconds.seconds);
-    this.timeArray[0] = (currentTime % TIME.unitsInMilliseconds.seconds) / TIME.unitsInMilliseconds.secondTenths;
+    this.timeArray[4] = Math.floor(this.metaTimes.currentTime / TIME.unitsInMilliseconds.days);
+    this.timeArray[3] = Math.floor((this.metaTimes.currentTime % TIME.unitsInMilliseconds.days) / TIME.unitsInMilliseconds.hours);
+    this.timeArray[2] = Math.floor((this.metaTimes.currentTime % TIME.unitsInMilliseconds.hours) / TIME.unitsInMilliseconds.minutes);
+    this.timeArray[1] = Math.floor((this.metaTimes.currentTime % TIME.unitsInMilliseconds.minutes) / TIME.unitsInMilliseconds.seconds);
+    this.timeArray[0] = (this.metaTimes.currentTime % TIME.unitsInMilliseconds.seconds) / TIME.unitsInMilliseconds.secondTenths;
   }
 
   /**
@@ -210,8 +212,8 @@ class ThunderTimer extends EventEmitter {
    */
   _getTimerData() {
     return {
-      initialTime,
-      endTime,
+      initialTime: this.metaTimes.initialTime,
+      endTime: this.metaTimes.endTime,
     };
   }
 
