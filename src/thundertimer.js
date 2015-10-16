@@ -46,7 +46,11 @@ const STATUS = {
 
 let initialTime;
 let endTime;
-let currentTime;
+let currentTime = 0;
+let realTime = 0;
+let onRestartTime = 0;
+let onPauseTime = 0;
+let leisureTime = 0;
 
 /**
  * ThunderTimer Class.
@@ -92,39 +96,46 @@ class ThunderTimer extends EventEmitter {
    * @param {number} [updateTimeInterval=TIME.unitsInMilliseconds.secondTenths] - Interval at which the timer is updated. (in milliseconds)
    */
   start(updateTimeInterval = TIME.unitsInMilliseconds.secondTenths) {
-    if (!this.thunder) {
-      initialTime = Date.now();
-      this.thunder = setInterval(this._updateTime.bind(this), updateTimeInterval);
-      this._updateStatus(STATUS.RUNNING);
-    }
+    if (this.status === STATUS.STOPPED) return;
+    !this.thunder ? initialTime = Date.now() : noop();
+    onPauseTime ? (function() {
+      onRestartTime = Date.now();
+      leisureTime += (onRestartTime - onPauseTime);
+    })() : noop();
+
+    this.thunder = setInterval(this._updateTime.bind(this), updateTimeInterval);
+    this._updateStatus(STATUS.RUNNING);
   }
 
   /**
    * Pauses a timer.
-   * @returns {number[]}
+   * @returns {string}
    */
   pause() {
+    if (this.status !== STATUS.RUNNING) return;
+    onPauseTime = Date.now();
+    clearInterval(this.thunder);
     this._updateStatus(STATUS.PAUSED);
-    return this.timeArray;
+    return this.getTime();
   }
 
   /**
    * Stops a timer.
-   * @returns {number[]}
    */
   stop() {
+    if (this.status !== STATUS.RUNNING && this.status !== STATUS.PAUSED) return;
     endTime = Date.now();
+    clearInterval(this.thunder);
     this._updateStatus(STATUS.STOPPED);
-    return this.timeArray;
   }
 
   /**
    * Returns a representation of the arrayTime of timer.
    * @param {boolean} [pretty=false] - If set to true timer is prettified and returned as String.
-   * @returns {string|Array}
+   * @returns {string}
    */
   getTime(pretty = false) {
-    return pretty ? this._prettify() : this.timeArray.reverse().join(this.separator);
+    return pretty ? this._prettify() : this.timeArray.slice().reverse().join(this.separator);
   }
 
   /**
@@ -171,7 +182,8 @@ class ThunderTimer extends EventEmitter {
    * @private
    */
   _updateTime() {
-    currentTime = Date.now() - initialTime;
+    realTime = Date.now() - initialTime;
+    currentTime = realTime - leisureTime;
 
     this.timeArray[4] = Math.floor(currentTime / TIME.unitsInMilliseconds.days);
     this.timeArray[3] = Math.floor((currentTime % TIME.unitsInMilliseconds.days) / TIME.unitsInMilliseconds.hours);
@@ -180,12 +192,22 @@ class ThunderTimer extends EventEmitter {
     this.timeArray[0] = (currentTime % TIME.unitsInMilliseconds.seconds) / TIME.unitsInMilliseconds.secondTenths;
   }
 
+  /**
+   * Updates general status of timer.
+   * @param {string} status - New status descriptor for timer.
+   * @private
+   */
   _updateStatus(status) {
     status === STATUS.RUNNING ? this._setIsRunning(true) : this._setIsRunning(false);
     this._setStatus(status);
     this.emit(status, this._getTimerData());
   }
 
+  /**
+   * Returns general data of the timer.
+   * @returns {Object}
+   * @private
+   */
   _getTimerData() {
     return {
       initialTime,
@@ -199,12 +221,14 @@ class ThunderTimer extends EventEmitter {
    * @private
    */
   _prettify() {
-    return this.timeArray[TIME.SECONDS_POSITION] + ' ' + TIME.SECONDS + ', ' +
-            this.timeArray[TIME.MINUTES_POSITION] + ' ' + TIME.MINUTES + ', ' +
+    return this.timeArray[TIME.DAYS_POSITION] + ' ' + TIME.DAYS + ', ' +
             this.timeArray[TIME.HOURS_POSITION] + ' ' + TIME.HOURS + ', ' +
-            this.timeArray[TIME.DAYS_POSITION] + ' ' + TIME.DAYS;
+            this.timeArray[TIME.MINUTES_POSITION] + ' ' + TIME.MINUTES + ', ' +
+            this.timeArray[TIME.SECONDS_POSITION] + ' ' + TIME.SECONDS;
   }
 
 }
+
+function noop() {}
 
 module.exports = ThunderTimer;
